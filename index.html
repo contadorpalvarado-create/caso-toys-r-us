@@ -356,6 +356,37 @@ body{
   background:rgba(0,120,255,.05);
 }
 
+.start-screen{
+  position:absolute;
+  inset:0;
+  z-index:60;
+  display:grid;
+  place-items:center;
+  background:#000;
+  color:#fff;
+  text-align:center;
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:opacity .55s ease, visibility .55s ease;
+}
+.start-screen.hidden{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+.start-screen .start-copy{
+  font-size:34px;
+  font-weight:560;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.start-screen .start-sub{
+  margin-top:18px;
+  color:#77777e;
+  font-size:22px;
+  letter-spacing:.08em;
+}
+
 @media (prefers-reduced-motion:reduce){
   .stage,.frame,.rv,.rail,.fade{
     transition:none!important;
@@ -464,6 +495,13 @@ body{
     <div class="fade" id="fade"></div>
     <div class="tap" id="tap" aria-label="Toca para reiniciar"></div>
 
+    <div class="start-screen" id="startScreen">
+      <div>
+        <div class="start-copy">Toca para comenzar</div>
+        <div class="start-sub">El Reel dura 40,7 segundos</div>
+      </div>
+    </div>
+
     <div class="guides" id="guides">
       <div class="safe-outline"></div>
       <div class="guide-right"></div>
@@ -489,10 +527,12 @@ body{
   const fade = document.getElementById("fade");
   const tap = document.getElementById("tap");
   const guides = document.getElementById("guides");
+  const startScreen = document.getElementById("startScreen");
 
   let index = 0;
   let timer = null;
   let progressTimer = null;
+  let started = false;
 
   function fit(){
     const scale = Math.min(innerWidth / W, innerHeight / H);
@@ -560,21 +600,33 @@ body{
     }, 700);
   }
 
+  function start(){
+    if(started) return;
+    started = true;
+    startScreen.classList.add("hidden");
+    show(0);
+    schedule();
+  }
+
   const params = new URLSearchParams(location.search);
   guides.classList.toggle("on", params.get("guides") === "1");
 
-  tap.addEventListener("click", restart);
-  tap.addEventListener("touchend", e => {
+  startScreen.addEventListener("click", start);
+  startScreen.addEventListener("touchend", e => {
     e.preventDefault();
-    restart();
+    start();
   }, {passive:false});
+
+  tap.addEventListener("click", () => {
+    if(started) restart();
+  });
 
   addEventListener("resize", fit);
   addEventListener("orientationchange", () => setTimeout(fit, 120));
 
   fit();
-  show(0);
-  schedule();
+  frames.forEach(frame => frame.classList.remove("on"));
+  bar.style.width = "0%";
 })();
 </script>
 </body>
